@@ -60,7 +60,7 @@ if (VCAP)
 	endif(SDL_FOUND)
 	
 	# Installation
-	install(DIRECTORY include DESTINATION include)
+	install(DIRECTORY include/Vcap DESTINATION include)
 	install(FILES lib/libvcap-cpp.so DESTINATION lib)
 else(VCAP)
 	message(FATAL_ERROR "The C version of the Vcap library must be installed. Aborting...")
