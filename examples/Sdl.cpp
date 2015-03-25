@@ -42,7 +42,7 @@ void sdlCleanup(SdlContext* ctx);
 
 /*
  * Grabs frames from a camera and displays them in a window in real-time. 
- * You must have SDL version 1.2 install for this example to compile.
+ * You must have SDL version 1.2 installed for this example to compile.
  */
 int main(int argc, char* argv[]) {
 	std::vector<Vcap::CameraPtr> cameras;
@@ -137,8 +137,8 @@ int sdlInit(SdlContext* ctx, int width, int height) {
 		std::cout << "Unable to set video mode: " << SDL_GetError() << std::endl;
 		return -1;
 	}
-
-    std::uint32_t rmask, gmask, bmask;
+	
+	std::uint32_t rmask, gmask, bmask;
 
 	#if SDL_BYTEORDER == SDL_BIG_ENDIAN
 		rmask = 0xff000000;
