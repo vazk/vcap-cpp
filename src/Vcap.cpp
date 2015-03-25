@@ -139,15 +139,8 @@ std::int32_t Vcap::Control::default_value() {
 std::vector<Vcap::MenuItemPtr> Vcap::Control::menu() {
 	std::vector<MenuItemPtr> menu;
 	
-	for (int i = 0; i < _control->menu_length; i++) {
-		vcap_menu_item_t* menuItem = new vcap_menu_item_t;
-		
-		vcap_copy_menu_item(&_control->menu[i], menuItem);
-		
-		menu.push_back(MenuItemPtr(new MenuItem(menuItem)));
-		
-		delete menuItem;
-	}
+	for (int i = 0; i < _control->menu_length; i++)
+		menu.push_back(MenuItemPtr(new MenuItem(&_control->menu[i])));
 	
 	return menu;
 }
@@ -225,9 +218,8 @@ std::vector<Vcap::FormatPtr> Vcap::Camera::formats() throw (RuntimeError) {
 	if (-1 == numFormats)
 		throw RuntimeError(std::string(vcap_error()));
 		
-	for (int i = 0; i < numFormats; i++) {
+	for (int i = 0; i < numFormats; i++)
 		formats.push_back(FormatPtr(new Format(&fmts[i])));
-	}
 
 	vcap_destroy_formats(fmts, numFormats);
 
@@ -263,9 +255,8 @@ std::vector<std::uint16_t> Vcap::Camera::frameRates(std::uint32_t formatCode, st
 	if (-1 == numFrameRates)
 		throw RuntimeError(std::string(vcap_error()));
 	
-	for (int i = 0; i < numFrameRates; i++) {
+	for (int i = 0; i < numFrameRates; i++)
 		frameRates.push_back(rates[i]);
-	}
 	
 	delete [] rates;
 	
