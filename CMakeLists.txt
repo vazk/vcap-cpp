@@ -22,6 +22,8 @@ find_library(VCAP vcap)
 
 if (VCAP)
 	# Library
+	file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
+	
 	include_directories(include)
 	
 	add_definitions(-Wall -std=c++11 -D_GNU_SOURCE)
