@@ -70,10 +70,10 @@ int main(int argc, char* argv[]) {
 	}
 	
 	//get format
-	std::uint32_t formatCode, width, height;
+	Vcap::Format format;
 	
 	try {
-		std::tie(formatCode, width, height) = camera->format();
+		format = camera->format();
 	} catch (Vcap::RuntimeError& e) {
 		std::cout << e.what() << std::endl;
 		return -1;
@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
 	//setup SDL
 	SdlContext sdl_ctx;
 	
-	sdlInit(&sdl_ctx, width, height);
+	sdlInit(&sdl_ctx, format.size().width(), format.size().height());
 	
 	SDL_Event event;
 	

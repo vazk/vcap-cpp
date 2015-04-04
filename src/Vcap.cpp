@@ -21,7 +21,7 @@
 #include <Vcap/Vcap.hpp>
 
 extern "C" {
-#include <vcap/vcap_decode.h>
+#include <vcap/decode.h>
 }
 
 #include <cstdint>
@@ -30,43 +30,72 @@ extern "C" {
 /*
  * Size class definition
  */
+Vcap::Size::Size(std::uint32_t width, std::uint32_t height) {
+	_size.width = width;
+	_size.height = height;
+} 
+ 
 Vcap::Size::Size(vcap_size_t size) {
 	_size = size;
 }
 
-std::uint32_t Vcap::Size::width() {
+std::uint32_t Vcap::Size::width() const {
 	return _size.width;
 }
 
-std::uint32_t Vcap::Size::height() {
+std::uint32_t Vcap::Size::height() const {
 	return _size.height;
 }
 
 /*
  * Format class definition
  */
-Vcap::Format::Format(vcap_format_t* format) {
-	_format = new vcap_format_t;	
-	vcap_copy_format(format, _format);
+Vcap::Format::Format() {
+} 
+ 
+Vcap::Format::Format(const std::uint32_t& code, const Size& size) {
+	_format.code = code;
+	_format.size.width = size.width();
+	_format.size.height = size.height();
 }
 
-Vcap::Format::~Format() {
-	vcap_destroy_format(_format);
+Vcap::Format::Format(vcap_format_t format) {
+	_format = format;
 }
 
 std::uint32_t Vcap::Format::code() {
+	return _format.code;
+}
+
+Vcap::Size Vcap::Format::size() {
+	return Size(_format.size);
+}
+
+/*
+ * Format info class definition
+ */
+Vcap::FormatInfo::FormatInfo(vcap_format_info_t* format) {
+	_format = new vcap_format_info_t;	
+	vcap_copy_format(format, _format);
+}
+
+Vcap::FormatInfo::~FormatInfo() {
+	vcap_destroy_format(_format);
+}
+
+std::uint32_t Vcap::FormatInfo::code() {
 	return _format->code;
 }
 
-std::string Vcap::Format::codeString() {
-	return std::string(_format->code_str);
+std::string Vcap::FormatInfo::codeString() {
+	return std::string(_format->code_string);
 }
 
-std::string Vcap::Format::description() {
-	return std::string(_format->desc);
+std::string Vcap::FormatInfo::description() {
+	return std::string(_format->description);
 }
 
-std::vector<Vcap::SizePtr> Vcap::Format::sizes() {
+std::vector<Vcap::SizePtr> Vcap::FormatInfo::sizes() {
 	std::vector<SizePtr> sizes;
 	
 	for (int i = 0; i < _format->num_sizes; i++) {
@@ -99,44 +128,44 @@ std::uint32_t Vcap::MenuItem::value() {
 /*
  * Control class definition
  */
-Vcap::Control::Control(vcap_control_t* control) {
-	_control = new vcap_control_t;
+Vcap::ControlInfo::ControlInfo(vcap_control_info_t* control) {
+	_control = new vcap_control_info_t;
 	vcap_copy_control(control, _control);
 }
 
-Vcap::Control::~Control() {
+Vcap::ControlInfo::~ControlInfo() {
 	vcap_destroy_control(_control);
 }
 
-Vcap::ControlId Vcap::Control::id() {
+Vcap::ControlId Vcap::ControlInfo::id() {
 	return (ControlId)_control->id;
 }
 
-Vcap::ControlType Vcap::Control::type() {
+Vcap::ControlType Vcap::ControlInfo::type() {
 	return (ControlType)_control->type;
 }
 
-std::string Vcap::Control::name() {
+std::string Vcap::ControlInfo::name() {
 	return std::string(_control->name);
 }
 
-std::int32_t Vcap::Control::min() {
+std::int32_t Vcap::ControlInfo::min() {
 	return _control->min;
 }
 
-std::int32_t Vcap::Control::max() {
+std::int32_t Vcap::ControlInfo::max() {
 	return _control->max;
 }
 
-std::int32_t Vcap::Control::step() {
+std::int32_t Vcap::ControlInfo::step() {
 	return _control->step;
 }
 
-std::int32_t Vcap::Control::default_value() {
+std::int32_t Vcap::ControlInfo::defaultValue() {
 	return _control->default_value;
 }
 
-std::vector<Vcap::MenuItemPtr> Vcap::Control::menu() {
+std::vector<Vcap::MenuItemPtr> Vcap::ControlInfo::menu() {
 	std::vector<MenuItemPtr> menu;
 	
 	for (int i = 0; i < _control->menu_length; i++)
@@ -212,10 +241,10 @@ bool Vcap::Camera::opened() {
 	return _camera->opened;
 }
 
-std::vector<Vcap::FormatPtr> Vcap::Camera::formats() throw (RuntimeError) {
-	std::vector<FormatPtr> formats;
+std::vector<Vcap::FormatInfoPtr> Vcap::Camera::formats() throw (RuntimeError) {
+	std::vector<FormatInfoPtr> formats;
 
-	vcap_format_t* fmts;
+	vcap_format_info_t* fmts;
 	
 	int numFormats = vcap_get_formats(_camera, &fmts);
 	
@@ -223,24 +252,24 @@ std::vector<Vcap::FormatPtr> Vcap::Camera::formats() throw (RuntimeError) {
 		throw RuntimeError(std::string(vcap_error()));
 		
 	for (int i = 0; i < numFormats; i++)
-		formats.push_back(FormatPtr(new Format(&fmts[i])));
+		formats.push_back(FormatInfoPtr(new FormatInfo(&fmts[i])));
 
 	vcap_destroy_formats(fmts, numFormats);
 
 	return formats;
 }
 
-std::tuple<std::uint32_t, std::uint32_t, std::uint32_t> Vcap::Camera::format() throw (RuntimeError) {
-	std::uint32_t formatCode, width, height;
+Vcap::Format Vcap::Camera::format() throw (RuntimeError) {
+	vcap_format_t format;
 	
-	if (-1 == vcap_get_format(_camera, &formatCode, &width, &height))
+	if (-1 == vcap_get_format(_camera, &format))
 		throw RuntimeError(std::string(vcap_error()));
 	
-	return std::make_tuple(formatCode, width, height);
+	return Format(format);
 }
 
-void Vcap::Camera::setFormat(std::uint32_t formatCode, std::uint32_t width, std::uint32_t height) throw (RuntimeError) {
-	if (-1 == vcap_set_format(_camera, formatCode, width, height))
+void Vcap::Camera::setFormat(const Format& format) throw (RuntimeError) {
+	if (-1 == vcap_set_format(_camera, format._format))
 		throw RuntimeError(std::string(vcap_error()));
 }
 
@@ -249,12 +278,12 @@ void Vcap::Camera::autoSetFormat() throw (RuntimeError) {
 		throw RuntimeError(std::string(vcap_error()));
 }
 
-std::vector<std::uint16_t> Vcap::Camera::frameRates(std::uint32_t formatCode, std::uint32_t width, std::uint32_t height) throw (RuntimeError) {
+std::vector<std::uint16_t> Vcap::Camera::frameRates(const Format& format) throw (RuntimeError) {
 	std::vector<std::uint16_t> frameRates;
 	
 	std::uint16_t* rates;
 	
-	int numFrameRates = vcap_get_frame_rates(_camera, formatCode, width, height, &rates);
+	int numFrameRates = vcap_get_frame_rates(_camera, format._format, &rates);
 	
 	if (-1 == numFrameRates)
 		throw RuntimeError(std::string(vcap_error()));
@@ -276,15 +305,15 @@ std::uint16_t Vcap::Camera::frameRate() throw (RuntimeError) {
 	return frameRate;
 }
 
-void Vcap::Camera::setFrameRate(std::uint16_t frameRate) throw (RuntimeError) {
+void Vcap::Camera::setFrameRate(const std::uint16_t& frameRate) throw (RuntimeError) {
 	if (-1 == vcap_set_frame_rate(_camera, frameRate))
 		throw RuntimeError(std::string(vcap_error()));
 }
 
-std::vector<Vcap::ControlPtr> Vcap::Camera::controls() throw (RuntimeError) {	
-	std::vector<ControlPtr> controls;
+std::vector<Vcap::ControlInfoPtr> Vcap::Camera::controls() throw (RuntimeError) {	
+	std::vector<ControlInfoPtr> controls;
 	
-	vcap_control_t* ctrls;
+	vcap_control_info_t* ctrls;
 	
 	int numControls = vcap_get_controls(_camera, &ctrls);
 	
@@ -292,7 +321,7 @@ std::vector<Vcap::ControlPtr> Vcap::Camera::controls() throw (RuntimeError) {
 		throw RuntimeError(std::string(vcap_error()));
 		
 	for (int i = 0; i < numControls; i++) {
-		controls.push_back(ControlPtr(new Control(&ctrls[i])));
+		controls.push_back(ControlInfoPtr(new ControlInfo(&ctrls[i])));
 	}
 	
 	vcap_destroy_controls(ctrls, numControls);
@@ -300,7 +329,7 @@ std::vector<Vcap::ControlPtr> Vcap::Camera::controls() throw (RuntimeError) {
 	return controls;
 }
 
-std::int32_t Vcap::Camera::controlValue(ControlId id) throw (RuntimeError) {
+std::int32_t Vcap::Camera::controlValue(const ControlId& id) throw (RuntimeError) {
 	std::int32_t value;
 	
 	if (-1 == vcap_get_control_value(_camera, (vcap_control_id_t)id, &value))
@@ -309,7 +338,7 @@ std::int32_t Vcap::Camera::controlValue(ControlId id) throw (RuntimeError) {
 	return value;
 }
 
-void Vcap::Camera::setControlValue(ControlId id, std::int32_t value) throw (RuntimeError) {
+void Vcap::Camera::setControlValue(const ControlId& id, const std::int32_t& value) throw (RuntimeError) {
 	if (-1 == vcap_set_control_value(_camera, (vcap_control_id_t)id, value))
 		throw RuntimeError(std::string(vcap_error()));
 }
@@ -339,25 +368,23 @@ std::size_t Vcap::Camera::grab(std::uint8_t** buffer, bool decode, bool bgr) thr
 			
 		return (std::size_t)bufferSize;
 	} else {
-		std::uint32_t formatCode, width, height;
-		
-		std::tie(formatCode, width, height) = format();
+		Format fmt = format();
 		
 		std::uint8_t* rawBuffer;
-		std::uint8_t* rgbBuffer = new std::uint8_t[3 * width * height];
+		std::uint8_t* rgbBuffer = new std::uint8_t[3 * fmt.size().width() * fmt.size().height()];
 		
 		bufferSize = vcap_grab_frame(_camera, &rawBuffer); 
 		
 		if (-1 == bufferSize)
 			throw RuntimeError(std::string(vcap_error()));
 		
-		if (-1 == vcap_decode(rawBuffer, rgbBuffer, formatCode, width, height, bgr))
+		if (-1 == vcap_decode(rawBuffer, rgbBuffer, fmt.code(), fmt.size().width(), fmt.size().height(), bgr))
 			throw RuntimeError(std::string(vcap_error()));
 			
 		delete [] rawBuffer;
 		
 		*buffer = rgbBuffer;
 		
-		return (std::size_t)(3 * width * height);
+		return (std::size_t)(3 * fmt.size().width() * fmt.size().height());
 	}
 }

@@ -30,7 +30,6 @@
 #include <cstddef>
 #include <stdexcept>
 #include <string>
-#include <tuple>
 #include <vector>
 
 extern "C" {
@@ -48,8 +47,9 @@ namespace Vcap {
 	class RuntimeError;
 	class Size;
 	class Format;
+	class FormatInfo;
 	class MenuItem;
-	class Control;
+	class ControlInfo;
 	class Camera;
 	
 	/**
@@ -63,6 +63,11 @@ namespace Vcap {
 	typedef SmartPtr<Format> FormatPtr;
 	
 	/**
+	 * \brief Format smart pointer.
+	 */
+	typedef SmartPtr<FormatInfo> FormatInfoPtr;
+	
+	/**
 	 * \brief Menu item smart pointer..
 	 */
 	typedef SmartPtr<MenuItem> MenuItemPtr;
@@ -70,7 +75,7 @@ namespace Vcap {
 	/**
 	 * \brief Menu item smart pointer..
 	 */
-	typedef SmartPtr<Control> ControlPtr;
+	typedef SmartPtr<ControlInfo> ControlInfoPtr;
 	
 	/**
 	 * \brief Camera smart pointer.
@@ -91,10 +96,13 @@ class Vcap::RuntimeError : public std::runtime_error {
  */
 class Vcap::Size {
 	friend class Format;
+	friend class FormatInfo;
 	
 	public:
-		std::uint32_t width();
-		std::uint32_t height();
+		Size(std::uint32_t width, std::uint32_t height);
+	
+		std::uint32_t width() const;
+		std::uint32_t height() const;
 	
 	private:
 		Size(vcap_size_t size);
@@ -102,14 +110,30 @@ class Vcap::Size {
 		vcap_size_t _size;
 };
 
-/**
- * \brief Encapsulates pixel format information.
- */
 class Vcap::Format {
 	friend class Camera;
 	
 	public:
-		virtual ~Format();
+		Format();
+		Format(const std::uint32_t& code, const Size& size);
+	
+		std::uint32_t code();
+		Size size();
+		
+	private:
+		Format(vcap_format_t format);
+	
+		vcap_format_t _format;
+};
+
+/**
+ * \brief Encapsulates pixel format information.
+ */
+class Vcap::FormatInfo {
+	friend class Camera;
+	
+	public:
+		virtual ~FormatInfo();
 	
 		std::uint32_t code();
 		std::string codeString();
@@ -118,16 +142,16 @@ class Vcap::Format {
 		std::vector<SizePtr> sizes();
 		
 	private:
-		Format(vcap_format_t* format);
+		FormatInfo(vcap_format_info_t* format);
 	
-		vcap_format_t* _format;
+		vcap_format_info_t* _format;
 };
 
 /**
  * \brief Encapsulates a camera control menu item.
  */
 class Vcap::MenuItem {
-	friend class Control;
+	friend class ControlInfo;
 
 	public:
 		virtual ~MenuItem();
@@ -144,11 +168,11 @@ class Vcap::MenuItem {
 /**
  * \brief Encapsulates a camera control.
  */
-class Vcap::Control {
+class Vcap::ControlInfo {
 	friend class Camera;
 
 	public:
-		virtual ~Control();
+		virtual ~ControlInfo();
 	
 		ControlId id();
 		ControlType type();
@@ -158,14 +182,14 @@ class Vcap::Control {
 		std::int32_t min();
 		std::int32_t max();
 		std::int32_t step();
-		std::int32_t default_value();
+		std::int32_t defaultValue();
 	
 		std::vector<MenuItemPtr> menu();
 	
 	private:
-		Control(vcap_control_t* control);
+		ControlInfo(vcap_control_info_t* control);
 	
-		vcap_control_t* _control;
+		vcap_control_info_t* _control;
 };
 
 /**
@@ -211,17 +235,17 @@ class Vcap::Camera {
 		/**
 		 * \brief Returns all formats supported by this device.
 		 */
-		std::vector<FormatPtr> formats() throw (RuntimeError);
+		std::vector<FormatInfoPtr> formats() throw (RuntimeError);
 		
 		/**
-		 * \brief Returns the current format as a tuple.
+		 * \brief Returns the current format.
 		 */
-		std::tuple<std::uint32_t, std::uint32_t, std::uint32_t> format() throw (RuntimeError);
+		Format format() throw (RuntimeError);
 		
 		/**
 		 * \brief Sets the current format.
 		 */
-		void setFormat(std::uint32_t formatCode, std::uint32_t width, std::uint32_t height) throw (RuntimeError);
+		void setFormat(const Format& format) throw (RuntimeError);
 		
 		/**
 		 * \brief Automatically sets the camera's format based upon decoder priority.
@@ -231,7 +255,7 @@ class Vcap::Camera {
 		/**
 		 * \brief Returns all supported frame rates for a given format and frame size.
 		 */
-		std::vector<std::uint16_t> frameRates(std::uint32_t formatCode, std::uint32_t width, std::uint32_t height) throw (RuntimeError);
+		std::vector<std::uint16_t> frameRates(const Format& format) throw (RuntimeError);
 		
 		/**
 		 * \brief Returns the current frame rate.
@@ -241,22 +265,22 @@ class Vcap::Camera {
 		/**
 		 * \brief Sets the current frame rate.
 		 */
-		void setFrameRate(std::uint16_t frameRate) throw (RuntimeError);
+		void setFrameRate(const std::uint16_t& frameRate) throw (RuntimeError);
 		
 		/**
 		 * \brief Returns all supported controls.
 		 */
-		std::vector<ControlPtr> controls() throw (RuntimeError);
+		std::vector<ControlInfoPtr> controls() throw (RuntimeError);
 		
 		/**
 		 * \brief Returns the current value for the specified control.
 		 */
-		std::int32_t controlValue(ControlId id) throw (RuntimeError);
+		std::int32_t controlValue(const ControlId& id) throw (RuntimeError);
 		
 		/**
 		 * \brief Sets the current value for the specified control.
 		 */
-		void setControlValue(ControlId id, std::int32_t value) throw (RuntimeError);
+		void setControlValue(const ControlId& id, const std::int32_t& value) throw (RuntimeError);
 		
 		/**
 		 * \brief Starts streaming.

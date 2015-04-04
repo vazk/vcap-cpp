@@ -65,10 +65,10 @@ int main(int argc, char* argv[]) {
 	}
 	
 	//get format
-	std::uint32_t formatCode, width, height;
+	Vcap::Format format;
 	
 	try {
-		std::tie(formatCode, width, height) = camera->format();
+		format = camera->format();
 	} catch (Vcap::RuntimeError& e) {
 		std::cout << e.what() << std::endl;
 		return -1;
@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
 	//convert raw RGB to PNG
 	PngBuffer pngBuffer;
 	
-	if (rgb24ToPng(rgbBuffer, &pngBuffer, width, height) == -1) {
+	if (rgb24ToPng(rgbBuffer, &pngBuffer, format.size().width(), format.size().height()) == -1) {
 		std::cout << "Error converting data to PNG" << std::endl;
 		return -1;
 	}

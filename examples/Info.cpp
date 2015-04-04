@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
 		
 		std::cout << "Formats:" << std::endl;
 		
-		std::vector<Vcap::FormatPtr> formats;
+		std::vector<Vcap::FormatInfoPtr> formats;
 		
 		try {
 			formats = cameras[i]->formats();
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
 				std::vector<std::uint16_t> frameRates;
 				
 				try {
-					frameRates = cameras[i]->frameRates(formats[j]->code(), sizes[k]->width(), sizes[k]->height());
+					frameRates = cameras[i]->frameRates(Vcap::Format(formats[j]->code(), *sizes[k]));
 				} catch (Vcap::RuntimeError& e) {
 					std::cout << e.what() << std::endl;
 					return -1;
@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
 		
 		std::cout << "Controls:" << std::endl;
 		
-		std::vector<Vcap::ControlPtr> controls;
+		std::vector<Vcap::ControlInfoPtr> controls;
 		
 		try {
 			controls = cameras[i]->controls();
@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
 			std::cout << " (min: " << std::to_string(controls[j]->min());
 			std::cout << ", max: " << std::to_string(controls[j]->max());
 			std::cout << ", step: " << std::to_string(controls[j]->step());
-			std::cout << ", default: " << std::to_string(controls[j]->default_value()) << ")";
+			std::cout << ", default: " << std::to_string(controls[j]->defaultValue()) << ")";
 			
 			if (controls[j]->type() == Vcap::CTRL_TYPE_MENU) {
 				std::vector<Vcap::MenuItemPtr> menu = controls[j]->menu();

@@ -28,7 +28,7 @@
 #include <Vcap/Vcap.hpp> 
 
 extern "C" {
-#include <vcap/vcap_formats.h>
+#include <vcap/formats.h>
 }
 
 namespace Vcap {
