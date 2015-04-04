@@ -208,6 +208,10 @@ void Vcap::Camera::close() throw (RuntimeError) {
 		throw RuntimeError(std::string(vcap_error()));
 }
 
+bool Vcap::Camera::opened() {
+	return vcap_camera_opened(_camera);
+}
+
 std::vector<Vcap::FormatPtr> Vcap::Camera::formats() throw (RuntimeError) {
 	std::vector<FormatPtr> formats;
 
@@ -318,7 +322,11 @@ void Vcap::Camera::start() throw (RuntimeError) {
 void Vcap::Camera::stop() throw (RuntimeError) {
 	if (-1 == vcap_stop_capture(_camera))
 		throw RuntimeError(std::string(vcap_error()));
-}	
+}
+
+bool Vcap::Camera::capturing() {
+	return vcap_camera_capturing(_camera);
+}
 
 std::size_t Vcap::Camera::grab(std::uint8_t** buffer, bool decode, bool bgr) throw (RuntimeError) {
 	int bufferSize;

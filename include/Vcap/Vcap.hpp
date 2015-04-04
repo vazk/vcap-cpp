@@ -204,6 +204,11 @@ class Vcap::Camera {
 		void close() throw (RuntimeError);
 		
 		/**
+		 * \brief Returns true if the camera is open; false otherwise.
+		 */
+		bool opened();
+		
+		/**
 		 * \brief Returns all formats supported by this device.
 		 */
 		std::vector<FormatPtr> formats() throw (RuntimeError);
@@ -262,6 +267,11 @@ class Vcap::Camera {
 		 * \brief Stops streaming.
 		 */
 		void stop() throw (RuntimeError);
+		
+		/**
+		 * \brief Returns true if the camera is streaming; false otherwise.
+		 */
+		bool capturing();
 		
 		/**
 		 * \brief Allocates a buffer, grabs an image from the camera (optionally decodes it), and stores it in the buffer.
