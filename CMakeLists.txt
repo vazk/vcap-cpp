@@ -18,9 +18,10 @@ if(DOXYGEN_FOUND)
 	set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "doc") 
 endif(DOXYGEN_FOUND)
 
-find_library(VCAP vcap)
+find_library(VCAP_LIBRARY vcap)
+find_path(VCAP_HEADER "vcap.h" PATHS "/usr/local/include/vcap" "/usr/include/vcap")
 
-if (VCAP)
+if (VCAP_LIBRARY AND VCAP_HEADER)
 	# Library
 	file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 	
@@ -33,11 +34,11 @@ if (VCAP)
 	
 	# Info example
 	add_executable(Info "examples/Info.cpp")
-	target_link_libraries(Info vcap-cpp ${VCAP})
+	target_link_libraries(Info vcap-cpp ${VCAP_LIBRARY})
 	
 	# Grab example
 	add_executable(Grab "examples/Grab.cpp")
-	target_link_libraries(Grab vcap-cpp ${VCAP})
+	target_link_libraries(Grab vcap-cpp ${VCAP_LIBRARY})
 	
 	# PNG example
 	find_package(PNG)
@@ -45,7 +46,7 @@ if (VCAP)
 	if(PNG_FOUND)
 		include_directories(${PNG_INCLUDE_DIR})
 		add_executable(Png "examples/Png.cpp")
-		target_link_libraries(Png vcap-cpp ${VCAP} ${PNG_LIBRARY})
+		target_link_libraries(Png vcap-cpp ${VCAP_LIBRARY} ${PNG_LIBRARY})
 	else(PNG_FOUND)
 		message(WARNING "You need libPNG install in order to build examples/Png.cpp")
 	endif(PNG_FOUND)
@@ -56,7 +57,7 @@ if (VCAP)
 	if(SDL_FOUND)
 		include_directories(${SDL_INCLUDE_DIR})
 		add_executable(Sdl "examples/Sdl.cpp")
-		target_link_libraries(Sdl vcap-cpp ${VCAP} ${SDL_LIBRARY})
+		target_link_libraries(Sdl vcap-cpp ${VCAP_LIBRARY} ${SDL_LIBRARY})
 	else(SDL_FOUND)
 		message(WARNING "You need SDL1.2 install in order to build examples/Sdl.cpp")
 	endif(SDL_FOUND)
@@ -64,6 +65,6 @@ if (VCAP)
 	# Installation
 	install(DIRECTORY include/Vcap DESTINATION include)
 	install(FILES lib/libvcap-cpp.so DESTINATION lib)
-else(VCAP)
+else(VCAP_LIBRARY AND VCAP_HEADER)
 	message(FATAL_ERROR "The C version of the Vcap library must be installed. Aborting...")
-endif(VCAP)
+endif(VCAP_LIBRARY AND VCAP_HEADER)
