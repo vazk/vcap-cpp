@@ -39,6 +39,10 @@ if (VCAP_LIBRARY AND VCAP_HEADER)
 	# Grab example
 	add_executable(Grab "examples/Grab.cpp")
 	target_link_libraries(Grab vcap-cpp ${VCAP_LIBRARY})
+
+    add_executable(Pgm "examples/Pgm.cpp")
+    target_link_libraries(Pgm vcap-cpp ${VCAP_LIBRARY})
+	
 	
 	# PNG example
 	find_package(PNG)
@@ -58,6 +62,8 @@ if (VCAP_LIBRARY AND VCAP_HEADER)
 		include_directories(${SDL_INCLUDE_DIR})
 		add_executable(Sdl "examples/Sdl.cpp")
 		target_link_libraries(Sdl vcap-cpp ${VCAP_LIBRARY} ${SDL_LIBRARY})
+        add_executable(sdl_pgm "examples/sdl_pgm.cpp")
+        target_link_libraries(sdl_pgm vcap-cpp ${VCAP_LIBRARY} ${SDL_LIBRARY})
 	else(SDL_FOUND)
 		message(WARNING "You need SDL1.2 install in order to build examples/Sdl.cpp")
 	endif(SDL_FOUND)
